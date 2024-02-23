@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 public class PlayerMovementAiming : MonoBehaviour
 {
@@ -10,34 +11,63 @@ public class PlayerMovementAiming : MonoBehaviour
     [SerializeField] GameObject shootPoint;
     [SerializeField] GameObject bulletPrefab;
 
-    [SerializeField] bool _movingRigidbody;
+    [SerializeField] bool _movingWithRigidbody;
 
 
     float _horizontal;
     float _vertical;
+    Rigidbody _rigidbody;
+    Vector3 _movement;
 
+    private void Start()
+    {
+        _rigidbody = GetComponent<Rigidbody>();
+    }
 
     // Update is called once per frame
     void Update()
     {
         _horizontal = Input.GetAxis("Horizontal");
-        _vertical = Input.GetAxis("Vertical");        
+        _vertical = Input.GetAxis("Vertical");
+        _movement = new Vector3(_horizontal, 0f, _vertical);
 
-        Moving();
+        if (!_movingWithRigidbody)
+        {
+            MovingTransform();
+        }
+       
+       
         AimTowardMouse();
         Fire();
 
     }
-
-    private void Moving()
+    private void FixedUpdate()
     {
-        Vector3 movement = new Vector3(_horizontal, 0f, _vertical);
-
-        if (movement.magnitude > 0)
+        if (_movingWithRigidbody)
         {
-            movement.Normalize();
-            movement *= _speed * Time.deltaTime;
-            transform.Translate(movement, Space.World);
+            MovingWithRigidbody();
+        }
+    }
+
+    private void MovingWithRigidbody()
+    {
+        if (_movement.magnitude > 0)
+        {
+            _movement.Normalize();
+            _movement *= _speed * Time.fixedDeltaTime;
+            _rigidbody.MovePosition(_rigidbody.position + _movement);
+
+        }
+        
+    }
+
+    private void MovingTransform()
+    {
+        if (_movement.magnitude > 0)
+        {
+            _movement.Normalize();
+            _movement *= _speed * Time.deltaTime;
+            transform.Translate(_movement, Space.World);
         }
     }
 
